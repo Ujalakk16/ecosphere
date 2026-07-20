@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        /* Smooth theme switching */
+        transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    /* Cards aur containers ke liye bhi smooth transition */
+    .dashboard-card, .table-row, button {
+        transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+}
