@@ -26,12 +26,10 @@ class ProductController extends Controller
 
 public function index(Request $request)
 {
-    // 1. Language select karein (Session se, default 'en')
-    $lang = Session::get('locale', 'en');
     // 1. Base query define karein
     $query = Product::query();
 
-    // 2. Filter aur Search Logic (sabke liye same rahega)
+    // 2. Filter aur Search Logic
     if ($request->filled('filter')) {
         $query->where('is_elastic', $request->filter === 'elastic');
     }
@@ -41,51 +39,29 @@ public function index(Request $request)
 
     $products = $query->paginate(12)->withQueryString(); 
 
-$tr = new GoogleTranslate($lang);
-
-foreach ($products as $product) {
-    // Cache key mein 'product_id' aur 'lang' ka use karein
-    $product->name = Cache::remember("prod_name_{$product->id}_{$lang}", 86400, function () use ($tr, $product) {
-        return $tr->translate($product->name);
-    });
-
-    $product->description = Cache::remember("prod_desc_{$product->id}_{$lang}", 86400, function () use ($tr, $product) {
-        return $tr->translate($product->description);
-    });
-}
-    
-    // Sidebar Counts (Admin dashboard mein bhi chahiye honge)
+    // Sidebar Counts
     $inelasticCount = Product::where('is_elastic', false)->count();
     $elasticCount = Product::where('is_elastic', true)->count();
 
-    // --- SMART LOGIC ---
-    // Agar URL mein 'admin' hai, toh admin view return karo
-   if ($request->is('admin/*')) {
-    $products = Product::all();
-    
-            $lang = Session::get('locale', 'en'); // Default language 'en'
-    $tr = new GoogleTranslate($lang);
-    
-    foreach ($products as $product) {
-        $product->name = $tr->translate($product->name);
-    }
-            return view('admin.dashboard', [
-                'products' => $products, // Yahi variable view mein loop hoga
-                'totalCount' => Product::count(),
-                'userCount' => User::count(),
-                'inelasticCount' => $inelasticCount,
-                'elasticCount' => $elasticCount
-            ]);
-
+    // --- ADMIN CHECK ---
+    if ($request->is('admin/*')) {
+        $adminProducts = Product::all();
         
-        }
-      
+        return view('admin.dashboard', [
+            'products' => $adminProducts,
+            'totalCount' => Product::count(),
+            'userCount' => User::count(),
+            'inelasticCount' => $inelasticCount,
+            'elasticCount' => $elasticCount
+        ]);
+    } // <-- Yeh bracket yahan lazmi band honi chahiye thi!
 
-       $totalCount = Product::count();
-       $userCount = User::count();
-    // Warna normal user ko homepage dikhao
-    return view('welcome', compact('products', 'inelasticCount', 'elasticCount','totalCount','userCount'));
+    $totalCount = Product::count();
+    $userCount = User::count();
+    
+    return view('welcome', compact('products', 'inelasticCount', 'elasticCount', 'totalCount', 'userCount'));
 }
+
   public function show($id)
 {
     $product = Product::findOrFail($id);

@@ -121,54 +121,73 @@ public function showResetPasswordForm(Request $request, $token = null)
         return Socialite::driver('google')->redirect();
     }
 
-    public function handleGoogleCallback()
-    {
-        try {
-            $googleUser = Socialite::driver('google')->user();
-            
-            $user = User::updateOrCreate([
-                'email' => $googleUser->getEmail(),
-            ], [
+public function handleGoogleCallback()
+{
+    try {
+        $googleUser = Socialite::driver('google')->user();
+        
+        // 1. Pehle check karein ke kya yeh email pehle se database mein hai?
+        $user = User::where('email', $googleUser->getEmail())->first();
+
+        if ($user) {
+            // Agar user pehle se hai (jaise aapka admin account), toh sirf login karwa dein, password overwrite mat karein!
+            Auth::login($user);
+        } else {
+            // Agar naya user hai toh create karein
+            $user = User::create([
                 'name' => $googleUser->getName(),
+                'email' => $googleUser->getEmail(),
                 'password' => Hash::make(Str::random(16)),
                 'email_verified_at' => now(),
             ]);
 
             Auth::login($user);
-            request()->session()->regenerate();
-
-            return redirect()->intended('/home');
-        } catch (\Exception $e) {
-            return redirect('/login')->withErrors(['email' => 'Google login failed. Please try again.']);
         }
-    }
 
-    // --- Facebook Login / Register ---
-    public function redirectToFacebook()
-    {
-        return Socialite::driver('facebook')->redirect();
-    }
+        request()->session()->regenerate();
+        return redirect()->intended('/home');
 
-    public function handleFacebookCallback()
-    {
-        try {
-            $fbUser = Socialite::driver('facebook')->user();
-            
-            $user = User::updateOrCreate([
-                'email' => $fbUser->getEmail(),
-            ], [
+    } catch (\Exception $e) {
+        return redirect('/login')->withErrors(['email' => 'Google login failed. Please try again.']);
+    }
+}
+
+
+// --- Facebook Login / Register ---
+public function redirectToFacebook()
+{
+    return Socialite::driver('facebook')->redirect();
+}
+
+public function handleFacebookCallback()
+{
+    try {
+        $fbUser = Socialite::driver('facebook')->user();
+        
+        // Facebook mein email null ho sakti hai, is liye check lazmi hai
+        $email = $fbUser->getEmail() ?? $fbUser->getId() . '@facebook.local';
+
+        $user = User::where('email', $email)->first();
+
+        if ($user) {
+            Auth::login($user);
+        } else {
+            $user = User::create([
                 'name' => $fbUser->getName(),
+                'email' => $email,
                 'password' => Hash::make(Str::random(16)),
                 'email_verified_at' => now(),
             ]);
 
             Auth::login($user);
-            request()->session()->regenerate();
-
-            return redirect()->intended('/home');
-        } catch (\Exception $e) {
-            return redirect('/login')->withErrors(['email' => 'Facebook login failed. Please try again.']);
         }
+
+        request()->session()->regenerate();
+        return redirect()->intended('/home');
+
+    } catch (\Exception $e) {
+        return redirect('/login')->withErrors(['email' => 'Facebook login failed. Please try again.']);
     }
+}
 
 }

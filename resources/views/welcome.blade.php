@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE htmllang="en" dir="ltr">
 <!-- <html lang="en" class="scroll-smooth"> -->
 <html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() == 'ur' ? 'rtl' : 'ltr' }}">
 <head>
@@ -9,7 +9,33 @@
         document.documentElement.classList.remove('dark');
     }
 </script>
-   
+   <!-- Hidden Google Translate Element -->
+<div id="google_translate_element" style="display:none;"></div>
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    includedLanguages: 'en,ur,zh-CN',
+    autoDisplay: false
+  }, 'google_translate_element');
+}
+
+// Language change trigger function
+function changeLanguage(langCode) {
+    var selectField = document.querySelector(".goog-te-combo");
+    if (selectField) {
+        selectField.value = langCode;
+        selectField.dispatchEvent(new Event('change'));
+        
+        // Button text update karne ke liye
+        let label = langCode === 'ur' ? 'UR' : (langCode === 'zh-CN' ? 'ZH' : 'EN');
+        document.getElementById('current_lang_label').innerText = label;
+    }
+}
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EcoSphere | Market Simulator</title>
@@ -79,6 +105,8 @@
                 <i class="fa-solid fa-chart-line text-white text-sm"></i>
             </div>
             <span class="text-sm font-bold text-white tracking-[0.2em] uppercase hidden sm:block">@trans('Ecosphere')</span>
+            <!-- <div id="google_translate_element" style="margin: 10px 0;"></div> -->
+
         </div>
 
         <div class="hidden md:flex flex-1 justify-center max-w-md">
@@ -87,19 +115,19 @@
             </form>
         </div>
 
-        <div class="hidden md:flex items-center gap-6">
+        <div  class="hidden md:flex items-center gap-6">
             <a href="{{ route('analytics') }}" class="text-[10px] font-semibold text-slate-400 hover:text-indigo-400 uppercase transition">@trans('Analytics')</a>
             
-            <div class="relative">
-                <button type="button" @click="langMenu = !langMenu" class="text-[10px] text-slate-400 uppercase hover:text-white transition flex items-center gap-1">
-                    {{ strtoupper(app()->getLocale()) }} <i class="fa-solid fa-chevron-down text-[8px]"></i>
-                </button>
-                <div x-show="langMenu" x-cloak @click.away="langMenu = false" class="absolute right-0 top-full mt-2 w-24 bg-slate-900 border border-white/10 rounded-lg shadow-xl py-2 z-50">
-                    <a href="{{ route('lang.switch', 'en') }}" class="block px-4 py-1 text-[10px] text-white hover:bg-white/10">@trans('English')</a>
-                    <a href="{{ route('lang.switch', 'ur') }}" class="block px-4 py-1 text-[10px] text-white hover:bg-white/10">@trans('Urdu')</a>
-                    <a href="{{ route('lang.switch', 'zh') }}" class="block px-4 py-1 text-[10px] text-white hover:bg-white/10">@trans('Chinese')</a>
-                </div>
-            </div>
+           <div class="relative" x-data="{ langMenu: false }">
+    <button type="button" @click="langMenu = !langMenu" class="text-[10px] text-slate-400 uppercase hover:text-white transition flex items-center gap-1">
+        <span id="current_lang_label">EN</span> <i class="fa-solid fa-chevron-down text-[8px]"></i>
+    </button>
+    <div x-show="langMenu" x-cloak @click.away="langMenu = false" class="absolute right-0 top-full mt-2 w-28 bg-slate-900 border border-white/10 rounded-lg shadow-xl py-2 z-50">
+        <button onclick="changeLanguage('en')" class="w-full text-left px-4 py-1.5 text-[10px] text-white hover:bg-white/10">English</button>
+        <button onclick="changeLanguage('ur')" class="w-full text-left px-4 py-1.5 text-[10px] text-white hover:bg-white/10">اردو (Urdu)</button>
+        <button onclick="changeLanguage('zh-CN')" class="w-full text-left px-4 py-1.5 text-[10px] text-white hover:bg-white/10">中文 (Chinese)</button>
+    </div>
+</div>
 <button type="button" 
     @click="darkMode = !darkMode; document.documentElement.classList.toggle('dark', darkMode); localStorage.theme = darkMode ? 'dark' : 'light'" 
     class="text-slate-400 hover:text-white">
