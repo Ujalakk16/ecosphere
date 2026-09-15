@@ -23,9 +23,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Force HTTPS for all assets
+// Force HTTPS for all assets safely
+if (! $this->app->runningInConsole()) {
     if ($this->app->environment('production') || request()->secure()) {
         URL::forceScheme('https');
+    }
+
     }
         // Tailwind pagination ke liye
         Paginator::useTailwind();
